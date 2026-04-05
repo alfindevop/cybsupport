@@ -505,86 +505,86 @@
         }
 
 // ==========================================
-        // 3. ULTIMATE BYPASS NEWS ENGINE (30+ ITEMS)
+        // 3. MULTI-ENGINE ONLINE NEWS SYNC (BYPASS)
         // ==========================================
         async function fetchThreatIntel() {
             const grid = document.getElementById('intelGrid');
-            grid.innerHTML = '<div style="color: var(--accent-primary); font-family: var(--font-mono); grid-column: 1/-1;">[SYS] Tunneling through Google Proxy for Live Feeds...</div>';
+            grid.innerHTML = '<div style="color: var(--accent-primary); font-family: var(--font-mono); grid-column: 1/-1;">[SYS] Rotating Proxy Engines for Live Data...</div>';
             
             const rssUrl = 'https://news.google.com/rss/search?q=technology&hl=ml&gl=IN&ceid=IN:ml';
             
-            // We use different proxy types to ensure one breaks through
-            const proxies = [
-                `https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}`,
-                `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(rssUrl)}`,
-                `https://corsproxy.io/?${encodeURIComponent(rssUrl)}`
+            // We will try these 3 methods in order until one succeeds
+            const engines = [
+                `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`, // Method 1: API
+                `https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}`,           // Method 2: Raw Proxy
+                `https://corsproxy.io/?${encodeURIComponent(rssUrl)}`                         // Method 3: Direct Bridge
             ];
 
             let items = [];
 
-            for (let proxy of proxies) {
+            for (let i = 0; i < engines.length; i++) {
                 try {
-                    const response = await fetch(proxy);
+                    const response = await fetch(engines[i]);
                     if (!response.ok) continue;
 
-                    const data = await response.json();
-                    const xmlText = data.contents || await response.text();
+                    if (i === 0) {
+                        // Handle JSON from rss2json
+                        const data = await response.json();
+                        items = data.items;
+                    } else {
+                        // Handle XML from Proxies
+                        const raw = await response.json();
+                        const xmlText = raw.contents || await response.text();
+                        const parser = new DOMParser();
+                        const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+                        items = Array.from(xmlDoc.querySelectorAll("item")).map(node => ({
+                            title: node.querySelector("title")?.textContent,
+                            link: node.querySelector("link")?.textContent,
+                            pubDate: node.querySelector("pubDate")?.textContent,
+                            description: node.querySelector("description")?.textContent
+                        }));
+                    }
                     
-                    // Manual XML Parsing (Most reliable way to avoid API errors)
-                    const parser = new DOMParser();
-                    const xmlDoc = parser.parseFromString(xmlText, "text/xml");
-                    const nodes = Array.from(xmlDoc.querySelectorAll("item"));
-                    
-                    items = nodes.map(node => ({
-                        title: node.querySelector("title")?.textContent,
-                        link: node.querySelector("link")?.textContent,
-                        pubDate: node.querySelector("pubDate")?.textContent,
-                        description: node.querySelector("description")?.textContent
-                    }));
-
-                    if (items.length > 5) break; // Success!
+                    if (items && items.length > 0) break; // Success!
                 } catch (e) {
-                    console.warn("[SYS] Proxy node rejected. Trying next tunnel...");
+                    console.warn(`Engine ${i+1} failed.`);
                 }
             }
 
-            // FINAL RENDER LOGIC
-            if (items.length > 0) {
-                grid.innerHTML = ''; 
-                // Display 30+ news items
-                items.slice(0, 35).forEach(item => {
-                    let cleanDesc = (item.description || "").replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ').trim();
-                    cleanDesc = cleanDesc.length > 150 ? cleanDesc.substring(0, 150) + '...' : cleanDesc;
-                    
-                    let dateStr = "";
-                    try {
-                        dateStr = new Date(item.pubDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }).toUpperCase();
-                    } catch(e) { dateStr = "LIVE"; }
-
-                    const card = document.createElement('div');
-                    card.className = 'intel-card';
-                    card.style.animation = "fadeUp 0.3s ease-out forwards";
-                    card.innerHTML = `
-                        <div class="intel-date" style="display:flex; justify-content:space-between;">
-                            <span>${dateStr}</span>
-                            <span style="color: var(--accent-secondary); font-size: 0.65rem; font-weight:bold;">[ TUNNEL_ACTIVE ]</span>
-                        </div>
-                        <a href="${item.link}" target="_blank" class="intel-title" style="font-family: 'Anek Malayalam', sans-serif; line-height: 1.5; font-size: 1.05rem; display:block; margin-top:5px;">${item.title}</a>
-                        <div class="intel-desc" style="font-family: 'Anek Malayalam', sans-serif; color: var(--text-muted); font-size:0.9rem;">${cleanDesc}</div>
-                    `;
-                    grid.appendChild(card);
-                });
-            } else {
+            if (items.length === 0) {
                 grid.innerHTML = `<div style="color: var(--danger); font-family: var(--font-mono); grid-column: 1/-1;">
-                    [FATAL] Local Network is dropping external API packets.<br><br>
-                    <b>LAST RESORT FIX:</b><br>
-                    1. Open Chrome/Brave Settings -> Privacy & Security.<br>
-                    2. Go to <b>"Security"</b> and turn off <b>"Use secure DNS"</b> or switch to Google DNS.<br>
-                    3. Refresh the page.
+                    [FATAL] Browser Security Policy (CORS) is blocking all online data.<br><br>
+                    <b>QUICK FIX:</b><br>
+                    1. Right-click your Chrome/Brave shortcut.<br>
+                    2. Add <code style="color:#fff;">--disable-web-security --user-data-dir="C:/temp"</code> to the end of the Target field.<br>
+                    3. Restart browser.
                 </div>`;
+                return;
             }
+
+            // Render UI
+            grid.innerHTML = ''; 
+            items.slice(0, 30).forEach(item => {
+                let cleanDesc = (item.description || "").replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ').trim();
+                cleanDesc = cleanDesc.length > 140 ? cleanDesc.substring(0, 140) + '...' : cleanDesc;
+                
+                let dateStr = new Date(item.pubDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }).toUpperCase();
+
+                const card = document.createElement('div');
+                card.className = 'intel-card';
+                card.innerHTML = `
+                    <div class="intel-date" style="display:flex; justify-content:space-between;">
+                        <span>${dateStr}</span>
+                        <span style="color: var(--accent-secondary); font-size: 0.6rem;">[ LIVE_SYNC ]</span>
+                    </div>
+                    <a href="${item.link}" target="_blank" class="intel-title" style="font-family: 'Anek Malayalam', sans-serif;">${item.title}</a>
+                    <div class="intel-desc" style="font-family: 'Anek Malayalam', sans-serif;">${cleanDesc}</div>
+                `;
+                grid.appendChild(card);
+            });
         }
 
+        
         // ==========================================
         // 4. CLAUDE COPILOT ENGINE
         // ==========================================
