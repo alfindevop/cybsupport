@@ -12,8 +12,8 @@ A searchable, filterable database of common penetration testing tools and payloa
 * **Fast Search:** Instantly `grep` through descriptions, commands, and syntax using the global search bar.
 * **Payloads:** Includes advanced injection techniques and WAF bypasses.
 
-### 2. Live Threat Intel
-An automated news aggregator pulling the latest cybersecurity articles and threat updates.
+### 2. Latest Technology News Update
+An automated news aggregator pulling the latest Technology updates.
 * **Live Sync:** Uses rotating proxy engines to fetch real-time RSS feeds directly to your browser.
 * **No-Backend Architecture:** Relies on public CORS proxies to pull cross-origin data seamlessly.
 
